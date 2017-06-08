@@ -27,12 +27,16 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['13.58.171.21','localhost', '127.0.0.1','ec2-13-58-171-21.us-east-2.compute.amazonaws.com']
 
-
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),
+]
 # Application definition
 
 INSTALLED_APPS = [
+    'polls.apps.PollsConfig',
     'django.contrib.admin',
     'django.contrib.auth',
+    'djng',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
@@ -50,11 +54,10 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'merge_contacts.urls'
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, "templates/merge_contacts")],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -78,7 +81,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'merge_contacts',
         'USER': 'root',
-        'PASSWORD': 'tushar',
+        'PASSWORD': '',
         'HOST': 'localhost',
         'PORT': '',
     }
@@ -120,5 +123,5 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
-
+STATIC_ROOT = ''
 STATIC_URL = '/static/'
