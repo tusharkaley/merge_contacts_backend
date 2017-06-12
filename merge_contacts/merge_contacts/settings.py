@@ -33,10 +33,12 @@ STATICFILES_DIRS = [
 # Application definition
 
 INSTALLED_APPS = [
+    'mcapi.apps.McapiConfig',
     'polls.apps.PollsConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'djng',
+    'corsheaders',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
@@ -44,6 +46,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'django.middleware.cache.UpdateCacheMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -51,8 +54,28 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.cache.FetchFromCacheMiddleware',
 ]
 
+CSRF_COOKIE_SECURE = False
+CORS_ALLOW_METHODS = (
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+)
+CACHES = {
+    'default': {
+        'BACKEND': 'redis_cache.RedisCache',
+        'LOCATION': '/usr/local/etc/redis/redis.sock',
+
+    },
+    'TIME_OUT': None,
+}
+CORS_ALLOW_CREDENTIALS = True
 ROOT_URLCONF = 'merge_contacts.urls'
 TEMPLATES = [
     {
@@ -79,9 +102,25 @@ WSGI_APPLICATION = 'merge_contacts.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'merge_contacts',
+            'NAME': 'defaultdb',
+            'USER': 'root',
+            'PASSWORD': 'tushar',
+            'HOST': 'localhost',
+            'PORT': '',
+        },
+    'db1': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'db1',
         'USER': 'root',
-        'PASSWORD': '',
+        'PASSWORD': 'tushar',
+        'HOST': 'localhost',
+        'PORT': '',
+    },
+    'db2': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'db2',
+        'USER': 'root',
+        'PASSWORD': 'tushar',
         'HOST': 'localhost',
         'PORT': '',
     }
