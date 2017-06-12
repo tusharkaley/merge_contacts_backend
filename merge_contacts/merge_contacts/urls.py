@@ -21,6 +21,7 @@ from django.conf.urls.static import static
 urlpatterns = [
 	url(r'^admin/', admin.site.urls),
     url(r'^polls/', include('polls.urls')),
+    url(r'^users/', include('mcapi.urls')),
 ]
 if settings.DEBUG:
     urlpatterns += staticfiles_urlpatterns()
