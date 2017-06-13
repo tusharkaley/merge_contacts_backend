@@ -1,1 +1,1 @@
-This is the repo for the task give by IntouchApp
+This is the repo for the task given by IntouchApp
