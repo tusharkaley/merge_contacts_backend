@@ -137,16 +137,19 @@ def merge_candidates(request):
 	prev_phone = ''
 	prev_buck_id = 0
 	dict1[1] = []
-
+	counter = 0
 	for number in phone_numbers:
 		if number.phone != prev_phone:
 			if number.contact_id not in dict2:
-				dict1_upd_key = prev_buck_id+1
+				dict1_upd_key = counter+1
 				dict1_upd_val = []
 				dict1_upd_val.append(number.contact_id)
 				dict1[dict1_upd_key] = dict1_upd_val
-				dict2[number.contact_id] = prev_buck_id+1
+				dict2[number.contact_id] = counter+1
 				prev_buck_id = prev_buck_id+1
+				counter = counter + 1
+			else:
+				prev_buck_id = dict2[number.contact_id]
 
 		else:
 			if number.contact_id not in dict2:
@@ -157,25 +160,33 @@ def merge_candidates(request):
 			else:
 				old_buck = 	dict2[number.contact_id]
 				dict1_values = dict1[old_buck]
-				dict1[old_buck] = dict1_values+dict1.pop(prev_buck_id)
+				dict1[old_buck] = dict1_values+dict1[prev_buck_id]
 				for custid in dict1[prev_buck_id]:
 					dict2[custid] = old_buck
-				dict1.pop(prev_buck_id)	
-				prev_buck_id = prev_buck_id-1
+				dict1.pop(prev_buck_id)
+				if counter != prev_buck_id:
+					prev_buck_id =counter
+				else:	
+					prev_buck_id = prev_buck_id-1
+					counter = 	counter - 1
 		prev_phone =	number.phone
-	
+	if counter != prev_buck_id:
+		prev_buck_id =counter
 	email_ids = Emails.objects.using(database).filter(user_phone = user_phone).order_by('email_id')
 	prev_email =''
-
+	
 	for email in email_ids:
 		if email.email_id != prev_email:
 			if email.contact_id not in dict2:
-				dict1_upd_key = prev_buck_id+1
+				dict1_upd_key = counter+1
 				dict1_upd_val = []
 				dict1_upd_val.append(email.contact_id)
 				dict1[dict1_upd_key] = dict1_upd_val
-				dict2[email.contact_id] = prev_buck_id+1
+				dict2[email.contact_id] = counter+1
 				prev_buck_id = prev_buck_id+1
+				counter = counter + 1
+			else:
+				prev_buck_id = dict2[email.contact_id]
 		else:
 			if email.contact_id not in dict2:
 				dict1_val = dict1[prev_buck_id]
@@ -185,13 +196,17 @@ def merge_candidates(request):
 			else:
 				old_buck = 	dict2[email.contact_id]
 				dict1_values = dict1[old_buck]
-				dict1[old_buck] = dict1_values+dict1.pop(prev_buck_id)
-				for custid in dict1[prev_buck_id]:
+				dict1[old_buck] = dict1_values+dict1[prev_buck_id]
+				for custid in dict1[old_buck]:
 					dict2[custid] = old_buck
 				dict1.pop(prev_buck_id)	
-				prev_buck_id = prev_buck_id-1	
+				if counter != prev_buck_id:
+					prev_buck_id =counter
+				else:	
+					prev_buck_id = prev_buck_id-1	
+					counter = 	counter - 1
 		prev_email	 = email.email_id	
-
+		
 	user_contacts = Contacts.objects.using(database).filter(user__phone_number = user_phone)	
 	name_id_mapping = {}
 	for contact in user_contacts:
