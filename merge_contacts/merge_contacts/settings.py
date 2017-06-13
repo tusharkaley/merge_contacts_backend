@@ -25,7 +25,7 @@ SECRET_KEY = ')%c%!7en@j8c9yd^r_o=3%^typy@d#lqanoyonv0ixpeeb38yk'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['13.58.171.21','localhost', '127.0.0.1','ec2-13-58-171-21.us-east-2.compute.amazonaws.com']
+ALLOWED_HOSTS = ['13.58.171.21','localhost', '127.0.0.1','ec2-13-58-171-21.us-east-2.compute.amazonaws.com','mcapiweb.com']
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
