@@ -3,14 +3,15 @@ from django.core.cache import cache
 from django.views.decorators.cache import never_cache
 from django.shortcuts import render
 from django.http import JsonResponse
-# Create your views here.
 from django.http import HttpResponse
 from .models import Users,Contacts,Phones,Emails
 import json
 import random
 import redis
 import django
+from random import randint
 from django.db import transaction
+from mcapi.helper import get_user_db 
 
 @never_cache
 def index(request):
@@ -28,7 +29,7 @@ def index(request):
 			userData['lastname'] = user.last_name
 			userData['phone'] = user.phone_number
 			userData['email'] = user.email_id
-			
+			userData['user_token'] = user.user_token
 			resp.append(userData)
 	if usersdb2:
 		for user in usersdb2:
@@ -38,6 +39,7 @@ def index(request):
 			userData['lastname'] = user.last_name
 			userData['phone'] = user.phone_number
 			userData['email'] = user.email_id
+			userData['user_token'] = user.user_token
 			
 			resp.append(userData)	
     
@@ -54,10 +56,11 @@ def add_user(request):
 		database = 'db1'
 	else:
 		database = 'db2'	
-	cache.set(body['phone'],database ,timeout=None)
-	print(cache.get(body['phone']))
+	random_no = randint(1,10000)	
+	user_token = str(body['phone'])+str(random_no)
+	cache.set(user_token,database ,timeout=None)
 
-	add_user = Users.objects.using(database).create(first_name=body['fname'],last_name=body['lname'],phone_number=body['phone'],email_id=body['email'])
+	add_user = Users.objects.using(database).create(first_name=body['fname'],last_name=body['lname'],phone_number=body['phone'],email_id=body['email'],user_token=user_token)
 	add_user.save();
 	resp ={}
 	resp['status'] = 'success'
@@ -68,9 +71,10 @@ def add_user(request):
 
 @never_cache
 def user_contacts(request):
-	user_phone = request.GET.get('user_phone', '')
-	database = cache.get(user_phone)
-	contacts = Contacts.objects.using(database).filter(user__phone_number = user_phone)
+	user_token = request.GET.get('user_token', '')
+	database = get_user_db(user_token)
+	print(database)
+	contacts = Contacts.objects.using(database).filter(user__user_token = user_token)
 	#phone_nos = Phones.objects.filter()
 	resp =[]
 	for contact in contacts:
@@ -98,22 +102,20 @@ def new_contact(request):
 	body = json.loads(body_unicode)
 	phone_numbers = body['phone_numbers']
 	email_ids = body['email_ids']
-	#print('tushar debug')
 	
-	#print(body['user_phone'])
-	database = cache.get(body['user_phone'])
-	user_id = Users.objects.using(database).get(phone_number__exact = body['user_phone']).id
+	database = get_user_db(body['user_token'])
+	user_id = Users.objects.using(database).get(user_token__exact = body['user_token']).id
 	add_contact = Contacts.objects.using(database).create(user_id=user_id,first_name=body['fname'],last_name=body['lname'])
 	
 	add_contact.save();
 	contact_id = add_contact.id
 	for phone in phone_numbers:
 		if phone != '':
-			add_phone = Phones.objects.using(database).create(phone=phone,contact_id=contact_id,user_phone=body['user_phone'])
+			add_phone = Phones.objects.using(database).create(phone=phone,contact_id=contact_id,user_token=body['user_token'])
 			add_phone.save();
 	for email in email_ids:
 		if email != '':
-			add_email = Emails.objects.using(database).create(email_id=email,contact_id=contact_id,user_phone=body['user_phone'])
+			add_email = Emails.objects.using(database).create(email_id=email,contact_id=contact_id,user_token=body['user_token'])
 			add_email.save();
 	transaction.commit(using=database) 
 
@@ -123,17 +125,14 @@ def new_contact(request):
 	response = JsonResponse(resp,content_type="application/json", safe=False)
 	return response	
 
-def trials(request):
-
-	return HttpResponse('ygygyg')
 @never_cache	
 def merge_candidates(request):
-	user_phone = request.GET.get('user_phone', '')
-	database = cache.get(user_phone)
+	user_token = request.GET.get('user_token', '')
+	database = get_user_db(user_token)
 	dict1 = {}
 	dict2 = {}
 	resp =[]
-	phone_numbers = Phones.objects.using(database).filter(user_phone = user_phone).order_by('phone')
+	phone_numbers = Phones.objects.using(database).filter(user_token = user_token).order_by('phone')
 	prev_phone = ''
 	prev_buck_id = 0
 	dict1[1] = []
@@ -172,7 +171,7 @@ def merge_candidates(request):
 		prev_phone =	number.phone
 	if counter != prev_buck_id:
 		prev_buck_id =counter
-	email_ids = Emails.objects.using(database).filter(user_phone = user_phone).order_by('email_id')
+	email_ids = Emails.objects.using(database).filter(user_token = user_token).order_by('email_id')
 	prev_email =''
 	
 	for email in email_ids:
@@ -207,7 +206,7 @@ def merge_candidates(request):
 					counter = 	counter - 1
 		prev_email	 = email.email_id	
 		
-	user_contacts = Contacts.objects.using(database).filter(user__phone_number = user_phone)	
+	user_contacts = Contacts.objects.using(database).filter(user__user_token = user_token)	
 	name_id_mapping = {}
 	for contact in user_contacts:
 		name_id_mapping[contact.id] = contact.first_name+" "+contact.last_name+"  "

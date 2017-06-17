@@ -9,5 +9,4 @@ urlpatterns = [
     url(r'^usercontacts$', views.user_contacts, name='user_contacts'),
     url(r'^usercontacts/new$', views.new_contact, name='new_contact'),
     url(r'^usercontacts/mergecands$', views.merge_candidates, name='merge_candidates'),
-    url(r'^trials$', views.trials, name='trials'),
 ]
