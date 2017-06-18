@@ -62,7 +62,7 @@ def add_user(request):
 	user_token = str(body['phone'])+str(random_no)
 	cache.set(user_token,database ,timeout=None)
 
-	add_user = Users.objects.using(database).create(first_name=body['fname'],last_name=body['lname'],phone_number=body['phone'],email_id=body['email'],user_token=user_token)
+	add_user = Users.objects.using(database).create(first_name=body['firstName'],last_name=body['lastName'],phone_number=body['phone'],email_id=body['email'],user_token=user_token)
 	add_user.save();
 	resp ={}
 	if add_user:
