@@ -19,7 +19,9 @@ def index(request):
 	usersdb1 = Users.objects.using('db1').all()
 	usersdb2 = Users.objects.using('db2').all()
 	
-	resp =[]
+	resp ={}
+	resp['status'] = 'success'
+	resp['data'] = []
 	
 	if usersdb1:
 		for user in usersdb1:
@@ -30,7 +32,7 @@ def index(request):
 			userData['phone'] = user.phone_number
 			userData['email'] = user.email_id
 			userData['user_token'] = user.user_token
-			resp.append(userData)
+			resp['data'].append(userData)
 	if usersdb2:
 		for user in usersdb2:
 			userData = {}
@@ -41,7 +43,7 @@ def index(request):
 			userData['email'] = user.email_id
 			userData['user_token'] = user.user_token
 			
-			resp.append(userData)	
+			resp['data'].append(userData)	
     
 	response = JsonResponse(resp,content_type="application/json", safe=False)	
 	return response
@@ -63,8 +65,13 @@ def add_user(request):
 	add_user = Users.objects.using(database).create(first_name=body['fname'],last_name=body['lname'],phone_number=body['phone'],email_id=body['email'],user_token=user_token)
 	add_user.save();
 	resp ={}
-	resp['status'] = 'success'
-	resp['resop_text'] ="Done"
+	if add_user:
+		resp['status'] = 'success'
+		resp['resop_text'] ="Done"
+	else:
+		resp['status'] = 'error'
+		resp['resop_text'] ="Could not save user"
+	
 	response = JsonResponse(resp,content_type="application/json", safe=False)
 	transaction.commit(using=database) 
 	return response	
@@ -73,10 +80,10 @@ def add_user(request):
 def user_contacts(request):
 	user_token = request.GET.get('user_token', '')
 	database = get_user_db(user_token)
-	print(database)
 	contacts = Contacts.objects.using(database).filter(user__user_token = user_token)
-	#phone_nos = Phones.objects.filter()
-	resp =[]
+	resp ={}
+	resp['data'] = []
+	resp['status']='success'
 	for contact in contacts:
 		userData = {}
 		userData['firstname'] = contact.first_name
@@ -87,11 +94,10 @@ def user_contacts(request):
 		numbers = Phones.objects.using(database).values_list('phone' ,flat=True).filter(contact__id = contact.id)
 		for number in numbers:
 			userData['phonenumbers'].append(number)
-			#userData['phonenumbers'].append(numbers)
 		emails = Emails.objects.using(database).values_list('email_id',flat=True).filter(contact__id = contact.id)
 		for email in emails:
 			userData['emails'].append(email)
-		resp.append(userData)
+		resp['data'].append(userData)
 
 	response = JsonResponse(resp,content_type="application/json", safe=False)	
 	return response;
@@ -118,10 +124,14 @@ def new_contact(request):
 			add_email = Emails.objects.using(database).create(email_id=email,contact_id=contact_id,user_token=body['user_token'])
 			add_email.save();
 	transaction.commit(using=database) 
-
-	resp ={}
-	resp['status'] = 'success'
-	resp['resop_text'] ="Done"
+	if add_phone and add_email:
+		resp ={}
+		resp['status'] = 'success'
+		resp['resop_text'] ="Done"
+	else:
+		resp ={}
+		resp['status'] = 'error'
+		resp['resop_text'] ="Could not save phone or emails"	
 	response = JsonResponse(resp,content_type="application/json", safe=False)
 	return response	
 
@@ -131,7 +141,9 @@ def merge_candidates(request):
 	database = get_user_db(user_token)
 	dict1 = {}
 	dict2 = {}
-	resp =[]
+	resp ={}
+	resp['status'] = 'success' 
+	resp['data'] = []
 	phone_numbers = Phones.objects.using(database).filter(user_token = user_token).order_by('phone')
 	prev_phone = ''
 	prev_buck_id = 0
@@ -214,7 +226,7 @@ def merge_candidates(request):
 		merge_data = []
 		for contact_id in dict1[key]:
 			merge_data.append(name_id_mapping[contact_id])
-		resp.append(merge_data)	
+		resp['data'].append(merge_data)	
 	response = JsonResponse(resp,content_type="application/json", safe=False)
 	return response		
 				 
