@@ -1,1 +1,1 @@
-This is the repo for the task given by IntouchApp
+This is the repo for the backend of merge contacts app
